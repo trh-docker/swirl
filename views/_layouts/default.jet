@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="has-navbar-fixed-top" lang="{{ language == "" ? "en" : language }}">
   <head>
-    <title>Swirl</title>
+    <title>TRICLL - Scale Speed and Power</title>
     <meta charset="utf-8">
     <meta name="keywords" content="swirl,docker,moby,swarm,docker-compose,docker-ui,docker-web-management">
     <meta name="description" content="{{ i18n("description") }}">
