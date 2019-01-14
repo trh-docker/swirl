@@ -1,5 +1,5 @@
 FROM quay.io/spivegin/golangnodesj AS build
-RUN apt-get -y update && apt-get -y upgrade && \
+RUN apt-get -y update && apt-get -y upgrade --allow-unauthenticated && \
     apt-get -y install git && apt-get -y autoremove && apt-get -y clean &&\
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 WORKDIR /opt/src/src/github.com/trh-docker/swirl
