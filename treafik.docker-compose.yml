@@ -1,0 +1,50 @@
+version: "3.3"
+
+services:
+  traefik:
+    image: traefik
+    command: --web --docker --docker.swarmmode --docker.watch --docker.domain=cirrus.io --logLevel=DEBUG
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - cirrus-net
+    deploy:
+      replicas: 3
+      placement:
+        constraints: [node.role==manager]
+      restart_policy:
+        condition: on-failure
+
+  web:
+    image: emilevauge/whoami
+    networks:
+      - cirrus-net
+    deploy:
+      replicas: 3
+      labels:
+        - "traefik.port=80"
+        - "traefik.docker.network=cirrus-net"
+        - "traefik.frontend.rule=Host:whoami.cirrus.io"
+        - "traefik.backend.loadbalancer.sticky=true"
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8081:8080"
+    stop_grace_period: 1m30s
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+
+networks:
+  cirrus-net:
+    driver: overlay

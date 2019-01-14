@@ -1,18 +1,44 @@
-version: '3'
+version: '3.7'
 
 services:
+  traefik:
+    image: traefik
+    command: --web --docker --docker.swarmmode --docker.watch --docker.domain=fass.adfreezone.org,fas.tricll.xyz --logLevel=DEBUG
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - adfree-net
+    deploy:
+      replicas: 3
+      placement:
+        constraints: [node.role==manager]
+      restart_policy:
+        condition: on-failure
   swirl:
-    image: cuigh/swirl
+    image: quay.io/spivegin/tricllswirl
     environment:
       DB_ADDRESS: mongo:27017/swirl
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 8001:8001
+#    ports:
+#      - 9079:8001
     networks:
       - net
+      - adfree-net
     deploy:
       replicas: 1
+      labels:
+        - "traefik.port=80"
+        - "traefik.docker.network=cirrus-net"
+        - "traefik.frontend.rule=Host:triclls.fass.adfreezone.org"
+        - "traefik.backend.loadbalancer.sticky=true"
       placement:
         constraints: [node.role == manager]
 
@@ -32,3 +58,5 @@ volumes:
 
 networks:
   net:
+  adfree-net:
+    driver: overlay
