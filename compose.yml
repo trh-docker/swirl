@@ -33,13 +33,13 @@ services:
     deploy:
       replicas: 1
       labels:
-        - "traefik.port=80"
-        - "traefik.docker.network=cirrus-net"
+        - "traefik.port=8001"
+        - "traefik.docker.network=adfree-net"
         - "traefik.frontend.rule=Host:s.example.com"
         - "traefik.backend.loadbalancer.sticky=true"
       placement:
-        constraints: [node.role == manager]
-
+        constraints:
+          - node.role==manager
   mongo:
     image: mongo
     volumes:

@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: traefik
+    command: --web --docker --docker.swarmmode --docker.watch --docker.domain=example.com --logLevel=DEBUG --acme=true
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - adfree-net
+    environment:
+      - TRAEFIK_CONFIG_REPO=https://spivegin:sf1WJNT3BDkSPhVFmbD2@gitlab.com/tricll/tricllproxyconfig.git
+    deploy:
+      replicas: 3
+      placement:
+        constraints: [node.role==manager]
+      restart_policy:
+        condition: on-failure
+    source: acme
+      target: /etc/traefik/acme.json
+      mode: 444
+  swirl:
+    image: quay.io/spivegin/tricllswirl
+    environment:
+      DB_ADDRESS: mongo:27017/swirl
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - net
+      - adfree-net
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.port=8001"
+        - "traefik.docker.network=adfree-net"
+        - "traefik.frontend.rule=Host:s.example.com"
+        - "traefik.backend.loadbalancer.sticky=true"
+      placement:
+        constraints:
+          - node.role==manager
+  mongo:
+    image: mongo
+    volumes:
+      - mongo:/data/db
+    networks:
+      - net
+    deploy:
+      replicas: 1
+volumes:
+  mongo:
+
+networks:
+  net:
+  adfree-net:
+    driver: overlay
+
+secrets:
+  acme:
+    file: ./acme/acme.json
